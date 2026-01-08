@@ -1,34 +1,27 @@
-import { useEffect, useState } from "react";
-import { getMovies } from "../api/movies";
-import { getGenres } from "../api/genres";
-import { getActors } from "../api/actors";
-import type { Movie } from "../types/movie";
-import type { Genre } from "../types/genre";
-import type { Actor } from "../types/actor";
+import { useMemo, useState } from "react";
+import { useMovies } from "../hooks/useMovies";
+import { useGenres } from "../hooks/useGenres";
+import { useActors } from "../hooks/useActors";
 
 export default function MoviesPage() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [actors, setActors] = useState<Actor[]>([]);
+  const [genreId, setGenreId] = useState<number | undefined>(undefined);
+  const [actorId, setActorId] = useState<number | undefined>(undefined);
+  const [year, setYear] = useState<number | undefined>(undefined);
 
-  const [genreId, setGenreId] = useState<number | undefined>();
-  const [actorId, setActorId] = useState<number | undefined>();
-  const [year, setYear] = useState<number | undefined>();
+  const { movies, loading: moviesLoading, error: moviesError } = useMovies({
+    genreId,
+    actorId,
+    year,
+  });
 
-  useEffect(() => {
-    Promise.all([getGenres(), getActors()]).then(([g, a]) => {
-      setGenres(g);
-      setActors(a);
-    });
-  }, []);
+  const { genres } = useGenres();
+  const { actors } = useActors();
 
-  useEffect(() => {
-    getMovies({ genreId, actorId, year }).then(setMovies);
-  }, [genreId, actorId, year]);
-
-  const years = Array.from(
-    new Set(movies.map(m => m.releaseYear))
-  ).sort((a, b) => b - a);
+  const years = useMemo(() => {
+    return Array.from(new Set(movies.map(m => m.releaseYear))).sort(
+      (a, b) => b - a
+    );
+  }, [movies]);
 
   const resetFilters = () => {
     setGenreId(undefined);
@@ -50,7 +43,7 @@ export default function MoviesPage() {
           <div className="team">
             <div>
               <span className="team-role">LEADER</span>
-              <span className="team-name">Kristo Amberg</span>
+              <span className="team-name">Kristi Amberg</span>
             </div>
             <div>
               <span className="team-role">MEMBER</span>
@@ -69,7 +62,9 @@ export default function MoviesPage() {
         >
           <option value="">Kõik žanrid</option>
           {genres.map(g => (
-            <option key={g.id} value={g.id}>{g.name}</option>
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
           ))}
         </select>
 
@@ -81,7 +76,9 @@ export default function MoviesPage() {
         >
           <option value="">Kõik näitlejad</option>
           {actors.map(a => (
-            <option key={a.id} value={a.id}>{a.name}</option>
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
           ))}
         </select>
 
@@ -93,7 +90,9 @@ export default function MoviesPage() {
         >
           <option value="">Kõik aastad</option>
           {years.map(y => (
-            <option key={y} value={y}>{y}</option>
+            <option key={y} value={y}>
+              {y}
+            </option>
           ))}
         </select>
 
@@ -101,6 +100,18 @@ export default function MoviesPage() {
           Reset
         </button>
       </section>
+
+      {moviesLoading && <div className="empty">Laadin filme…</div>}
+
+      {moviesError && (
+        <div className="empty">Filme ei õnnestunud laadida</div>
+      )}
+
+      {!moviesLoading && movies.length === 0 && (
+        <div className="empty">
+          Ühtegi filmi ei leitud valitud filtritega.
+        </div>
+      )}
 
       <section className="movies-grid">
         {movies.map(movie => (
@@ -114,7 +125,9 @@ export default function MoviesPage() {
               <div>
                 <strong>Žanrid:</strong>{" "}
                 {movie.genres.map(g => (
-                  <span key={g.id} className="badge">{g.name}</span>
+                  <span key={g.id} className="badge">
+                    {g.name}
+                  </span>
                 ))}
               </div>
 
@@ -126,12 +139,6 @@ export default function MoviesPage() {
           </div>
         ))}
       </section>
-
-      {movies.length === 0 && (
-        <div className="empty">
-          Ühtegi filmi ei leitud valitud filtritega.
-        </div>
-      )}
     </div>
   );
 }

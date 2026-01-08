@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { fetchGenres, type Genre } from "../api/genres";
+import { getGenres } from "../api/genres";
+import type { Genre } from "../types/genre";
 
 export function useGenres() {
   const [genres, setGenres] = useState<Genre[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    fetchGenres()
+    setLoading(true);
+    getGenres()
       .then(setGenres)
-      .catch((err) => setError(err.message ?? "Viga žanrite laadimisel"))
+      .catch(err => setError(err as Error))
       .finally(() => setLoading(false));
   }, []);
 

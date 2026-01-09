@@ -43,7 +43,7 @@ export default function MoviesPage() {
           <div className="team">
             <div>
               <span className="team-role">LEADER</span>
-              <span className="team-name">Kristi Amberg</span>
+              <span className="team-name">Kristo Amberg</span>
             </div>
             <div>
               <span className="team-role">MEMBER</span>
